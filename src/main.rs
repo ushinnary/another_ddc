@@ -1,4 +1,5 @@
 pub mod ddcutil;
+pub mod helpers;
 use clap::{command, Parser};
 
 #[derive(Parser, Debug)]

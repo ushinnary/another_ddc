@@ -1,6 +1,9 @@
 use ddc_hi::{traits::Ddc, Display};
 
+use crate::helpers::Helper;
+
 pub struct ScreenManagement {
+    monitors: Vec<Display>,
     smooth: bool,
 }
 
@@ -12,7 +15,10 @@ impl Default for ScreenManagement {
 
 impl ScreenManagement {
     pub fn new(smooth: bool) -> Self {
-        Self { smooth }
+        Self {
+            smooth,
+            monitors: Display::enumerate(),
+        }
     }
 
     pub fn increase_brightness(&mut self) -> Result<(), String> {
@@ -33,33 +39,31 @@ impl ScreenManagement {
 
     pub fn set_brightness(&mut self, brightness: u16) -> Result<(), String> {
         let brightness = brightness.min(100).max(0);
-        let mut monitors = Display::enumerate();
 
         let (all_min_brightness, _) = self.get_all_monitors_min_and_max_brightness();
 
         match self.smooth {
             true => {
-                let to_increment = brightness > all_min_brightness;
-                let range: Vec<u16> = if to_increment {
-                    (all_min_brightness..=brightness).collect()
-                } else {
-                    (brightness..=all_min_brightness).rev().collect()
-                };
+                let range = Helper::get_range_for_brightness(brightness, all_min_brightness);
 
                 for new_brightness in range {
-                    monitors.iter_mut().for_each(|monitor| {
-                        Self::set_ddcutil_brightness(monitor, new_brightness).unwrap();
-                    });
+                    self.apply_brightness_to_all_monitors(new_brightness)?;
 
                     std::thread::sleep(std::time::Duration::from_millis(50));
                 }
             }
             false => {
-                monitors.iter_mut().for_each(|monitor| {
-                    Self::set_ddcutil_brightness(monitor, brightness).unwrap();
-                });
+                self.apply_brightness_to_all_monitors(brightness)?;
             }
         }
+
+        Ok(())
+    }
+
+    fn apply_brightness_to_all_monitors(&mut self, brightness: u16) -> Result<(), String> {
+        self.monitors.iter_mut().for_each(|monitor| {
+            Self::set_ddcutil_brightness(monitor, brightness).unwrap();
+        });
 
         Ok(())
     }
@@ -83,7 +87,7 @@ impl ScreenManagement {
     }
 
     fn get_all_monitors_min_and_max_brightness(&mut self) -> (u16, u16) {
-        Display::enumerate()
+        self.monitors
             .iter_mut()
             .map(|monitor| Self::get_ddcutil_brightness(monitor).unwrap())
             .fold(
