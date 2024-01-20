@@ -10,10 +10,8 @@ Let you manage your screen's brightness with a simple command line. 💡
 Use this tool at your own risk. The author or contributors cannot be held responsible for any damage or issues that may occur from using this tool. 🧑‍💻
 
 ## Installation
-### Windows
 ```bash
-cargo run --release
-.\add-to-path.bat
+cargo install --path .
 ```
 
 ## Usage
