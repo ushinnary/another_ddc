@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.4.11", features = ["derive"] }
-ddc-hi = { version = "0.5", features = ["log-kv"], git = "https://github.com/arcnmx/ddc-hi-rs", branch = "v0.5.x" }
+ddc-hi = { version = "0.5", git = "https://github.com/arcnmx/ddc-hi-rs", branch = "v0.5.x" }

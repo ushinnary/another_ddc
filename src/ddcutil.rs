@@ -1,7 +1,6 @@
 use ddc_hi::{traits::Ddc, Display};
 
 pub struct ScreenManagement {
-    pub monitors: Box<Vec<Display>>,
     smooth: bool,
 }
 
@@ -13,12 +12,7 @@ impl Default for ScreenManagement {
 
 impl ScreenManagement {
     pub fn new(smooth: bool) -> Self {
-        let monitors: Vec<Display> = Display::enumerate();
-
-        Self {
-            monitors: Box::new(monitors),
-            smooth,
-        }
+        Self { smooth }
     }
 
     pub fn increase_brightness(&mut self) -> Result<(), String> {
@@ -41,67 +35,35 @@ impl ScreenManagement {
         Ok(())
     }
 
-    // TODO: Implement smooth transitions for multiple monitors
     pub fn set_brightness(&mut self, brightness: u16) -> Result<(), String> {
-        // let mut handles: Vec<std::thread::JoinHandle<std::result::Result<(), String>>> = Vec::new();
+        let brightness = brightness.min(100).max(0);
+        let mut monitors = Display::enumerate();
 
-        // let (all_min_brightness, all_max_brightness) =
-        // self.get_all_monitors_min_and_max_brightness();
-        // dbg!(all_min_brightness);
-        // dbg!(all_max_brightness);
+        let (all_min_brightness, _) = self.get_all_monitors_min_and_max_brightness();
 
-        // let barrier = Arc::new(Barrier::new(self.monitors.len()));
+        match self.smooth {
+            true => {
+                let to_increment = brightness > all_min_brightness;
+                let range: Vec<u16> = if to_increment {
+                    (all_min_brightness..=brightness).collect()
+                } else {
+                    (brightness..=all_min_brightness).rev().collect()
+                };
 
-        self.monitors.iter_mut().for_each(|monitor| {
-            // let brightness_clone = brightness;
-            // let smooth_clone = smooth;
-            // let barrier_clone = Arc::clone(&barrier);
+                for new_brightness in range {
+                    monitors.iter_mut().for_each(|monitor| {
+                        Self::set_ddcutil_brightness(monitor, new_brightness).unwrap();
+                    });
 
-            // let handle = thread::spawn(move || {
-            //     let (current_brightness, max_brightness) = Self::get_ddcutil_brightness(&monitor)?;
-
-            //     let brightness = brightness_clone.min(max_brightness).max(0);
-
-            //     match smooth_clone {
-            //         true => {
-            //             let to_increment = brightness > current_brightness;
-
-            //             let range: Vec<u16> = if brightness > current_brightness {
-            //                 (current_brightness..=brightness).collect()
-            //             } else {
-            //                 (brightness..=current_brightness.min(max_brightness))
-            //                     .rev()
-            //                     .collect()
-            //             };
-
-            //             for new_brightness in range {
-            //                 barrier_clone.wait(); // Wait for all threads to reach this point
-            //                 dbg!(to_increment, new_brightness);
-
-            //                 if to_increment && new_brightness > current_brightness
-            //                     || !to_increment && new_brightness < current_brightness
-            //                 {
-            //                     Self::set_ddcutil_brightness(&monitor, new_brightness)?;
-            //                 }
-
-            //                 std::thread::sleep(std::time::Duration::from_millis(50));
-            //             }
-            //         }
-            //         false => {
-            //             Self::set_ddcutil_brightness(&monitor, brightness)?;
-            //         }
-            //     }
-
-            //     Ok(())
-            // });
-
-            // handles.push(handle);
-            Self::set_ddcutil_brightness(monitor, brightness).unwrap();
-        });
-
-        // for handle in handles {
-        //     handle.join().unwrap()?;
-        // }
+                    std::thread::sleep(std::time::Duration::from_millis(50));
+                }
+            }
+            false => {
+                monitors.iter_mut().for_each(|monitor| {
+                    Self::set_ddcutil_brightness(monitor, brightness).unwrap();
+                });
+            }
+        }
 
         Ok(())
     }
@@ -125,7 +87,7 @@ impl ScreenManagement {
     }
 
     fn get_all_monitors_min_and_max_brightness(&mut self) -> (u16, u16) {
-        self.monitors
+        Display::enumerate()
             .iter_mut()
             .map(|monitor| Self::get_ddcutil_brightness(monitor).unwrap())
             .fold(
