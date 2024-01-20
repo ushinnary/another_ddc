@@ -17,21 +17,17 @@ impl ScreenManagement {
 
     pub fn increase_brightness(&mut self) -> Result<(), String> {
         let (all_min_brightness, _) = self.get_all_monitors_min_and_max_brightness();
-
-        let new_brightness = (all_min_brightness + 1).min(100);
+        let new_brightness = all_min_brightness.saturating_add(1).min(100);
 
         self.set_brightness(new_brightness).unwrap();
-
         Ok(())
     }
 
     pub fn decrease_brightness(&mut self) -> Result<(), String> {
         let (all_min_brightness, _) = self.get_all_monitors_min_and_max_brightness();
-
-        let new_brightness = (all_min_brightness - 1).max(0);
+        let new_brightness = all_min_brightness.saturating_sub(1).max(0);
 
         self.set_brightness(new_brightness).unwrap();
-
         Ok(())
     }
 
