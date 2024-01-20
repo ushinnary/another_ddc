@@ -22,16 +22,18 @@ struct Args {
 }
 fn main() {
     let args = Args::parse();
-    let mut ddc_management = ddcutil::ScreenManagement::new(args.smooth);
 
     match (args.brightness, args.decrease, args.increase) {
         (Some(brightness), false, false) => {
+            let mut ddc_management = ddcutil::ScreenManagement::new(args.smooth);
             ddc_management.set_brightness(brightness).unwrap();
         }
         (_, true, false) => {
+            let mut ddc_management = ddcutil::ScreenManagement::new(false);
             ddc_management.decrease_brightness().unwrap();
         }
         (_, false, true) => {
+            let mut ddc_management = ddcutil::ScreenManagement::new(false);
             ddc_management.increase_brightness().unwrap();
         }
         _ => (),
