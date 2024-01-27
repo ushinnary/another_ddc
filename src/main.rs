@@ -20,21 +20,26 @@ struct Args {
     /// Decrease the brightness by one
     #[arg(short, long)]
     decrease: bool,
+
+    /// Step size to use when increasing or decreasing the brightness
+    /// Like increase by 1% or 5% etc
+    #[arg(long, default_value = "1")]
+    step: u8,
 }
 fn main() {
     let args = Args::parse();
 
     match (args.brightness, args.decrease, args.increase) {
         (Some(brightness), false, false) => {
-            let mut ddc_management = ddcutil::ScreenManagement::new(args.smooth);
+            let mut ddc_management = ddcutil::ScreenManagement::new(args.smooth, args.step);
             ddc_management.set_brightness(brightness).unwrap();
         }
         (_, true, false) => {
-            let mut ddc_management = ddcutil::ScreenManagement::new(false);
+            let mut ddc_management = ddcutil::ScreenManagement::new(false, args.step);
             ddc_management.decrease_brightness().unwrap();
         }
         (_, false, true) => {
-            let mut ddc_management = ddcutil::ScreenManagement::new(false);
+            let mut ddc_management = ddcutil::ScreenManagement::new(false, args.step);
             ddc_management.increase_brightness().unwrap();
         }
         _ => (),
