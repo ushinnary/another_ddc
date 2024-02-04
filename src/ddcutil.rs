@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use crate::helpers::ddc_brightness;
 use ddc_hi::{Backend, Display};
 
@@ -71,7 +73,7 @@ impl ScreenManagement {
                 for new_brightness in range {
                     self.apply_brightness_to_all_monitors(new_brightness)?;
 
-                    std::thread::sleep(std::time::Duration::from_millis(SLEEP_DURATION));
+                    thread::sleep(Duration::from_millis(SLEEP_DURATION));
                 }
             }
             false => {
