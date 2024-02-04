@@ -1,5 +1,5 @@
 use crate::helpers::ddc_brightness;
-use ddc_hi::Display;
+use ddc_hi::{Backend, Display};
 
 const MAX_BRIGHTNESS: u16 = 100;
 const MIN_BRIGHTNESS: u16 = 0;
@@ -19,9 +19,16 @@ impl Default for ScreenManagement {
 
 impl ScreenManagement {
     pub fn new(smooth: bool, step: u8) -> Self {
+        let mut monitors = Display::enumerate();
+
+        // Using only NVAPI on Windows if available
+        if cfg!(target_os = "windows") && Backend::values().contains(&Backend::Nvapi) {
+            monitors.retain(|monitor| monitor.backend().name() == "nvapi");
+        }
+
         Self {
             smooth,
-            monitors: Display::enumerate(),
+            monitors,
             step: step.max(1),
         }
     }
