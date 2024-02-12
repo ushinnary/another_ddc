@@ -31,7 +31,7 @@ impl ScreenManagement {
         Self {
             smooth,
             monitors,
-            step: step.max(1),
+            step: step.clamp(1, 10),
         }
     }
 
@@ -61,7 +61,7 @@ impl ScreenManagement {
 
     /// Set the brightness of all monitors to the given value.
     pub fn set_brightness(&mut self, brightness: u16) -> Result<(), String> {
-        let brightness = brightness.min(MAX_BRIGHTNESS).max(MIN_BRIGHTNESS);
+        let brightness = brightness.clamp(MIN_BRIGHTNESS, MAX_BRIGHTNESS);
 
         let (all_min_brightness, _) = self.get_all_monitors_min_and_max_brightness();
 
