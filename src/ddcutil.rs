@@ -3,8 +3,11 @@ use std::{thread, time::Duration};
 use crate::helpers::ddc_brightness;
 use ddc_hi::{Backend, Display};
 
+/// Maximum brightness value
 const MAX_BRIGHTNESS: u16 = 100;
+/// Minimum brightness value
 const MIN_BRIGHTNESS: u16 = 0;
+/// MS to wait between each brightness change
 const SLEEP_DURATION: u64 = 50;
 
 pub struct ScreenManagement {
